@@ -1,0 +1,19 @@
+{
+  "dependencies": {
+    "mongoose": "^6.6.3"
+  },
+  "name": "moongo",
+  "version": "1.0.0",
+  "main": "index.js",
+  "devDependencies": {
+    "nodemon": "^2.0.20"
+  },
+  "scripts": {
+    "dev": "nodemon index.js"
+  },
+  "type": "module",
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": ""
+}
