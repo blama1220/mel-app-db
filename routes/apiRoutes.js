@@ -22,4 +22,14 @@ module.exports = (app) => {
       res.json(data);
     });
   });
+
+  app.get("/movie/search", (req, res) => {
+    let title = req.query.title;
+    console.log(title);
+    db.Entertainment.find({ title: { $regex: title, $options: "i" } })
+      .limit(10)
+      .then((data) => {
+        res.json(data);
+      });
+  });
 };
