@@ -3,7 +3,7 @@ const db = require("../models");
 module.exports = (app) => {
   // API routes using userControllers
 
-  app.get("/movie", (req, res) => {
+  app.get("/entertainment", (req, res) => {
     db.Entertainment.find({})
       .limit(10)
       .then((data) => {
@@ -11,7 +11,7 @@ module.exports = (app) => {
       });
   });
 
-  app.post("/movie", (req, res) => {
+  app.post("/entertainment", (req, res) => {
     db.Entertainment.create(req.body).then((data) => {
       res.json(data);
     });
@@ -23,7 +23,7 @@ module.exports = (app) => {
     });
   });
 
-  app.get("/movie/search", (req, res) => {
+  app.get("/entertainment/search", (req, res) => {
     let title = req.query.title;
     console.log(title);
     db.Entertainment.find({ title: { $regex: title, $options: "i" } })
