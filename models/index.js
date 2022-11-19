@@ -2,4 +2,5 @@
 
 module.exports = {
     Entertainment: require("./Entertainment"),
+    Users: require("./User")
   };

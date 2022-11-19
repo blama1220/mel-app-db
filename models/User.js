@@ -8,7 +8,7 @@ const userSchema = new Schema(
     work: String,
     location: String,
     age: Number,
-    gender: { type: String, enum: ["Male", "Female", ""] },
+    gender: String,
     list: [{ moviesId: String, stateid: String }],
   },
   { timestamps: true }
