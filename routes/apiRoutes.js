@@ -1,11 +1,69 @@
 
 const db = require("../models");
+var mongoose = require('mongoose');
 module.exports = (app) => {
 
-  app.get("/entertainment", (req, res) => {
+  app.get("/users", (req, res) => {
     db.Users.find({})
+    .populate("list")
+    .populate("states")
+    .populate({ 
+      path: 'states',
+      populate: {
+        path: 'movie',
+      }
+    })
+    .then((data) => {
+      res.json(data);
+    });
+  });
+
+  app.post("/getState", (req, res) => {
+    db.UserMovie.findById(req.body.id)
+    .populate("movie")
+    .then((data) => {
+      res.json(data);
+    })
+  });
+
+
+  // Agregar movie al usuario
+  // El body necesita:
+  // *Email del usuario (email)
+  // *Id de la pelicula (movieId)
+  app.post("/users/addmovie", (req, res) => {
+    db.Users.findOneAndUpdate({email: req.body.email},{$push: {list: req.body.movieId}})
       .then((data) => {
-        res.json(data);
+        res.json("Movie added to " + data.name);
+      });
+  });
+
+  // Agregar state movie al usuario
+  // El body necesita:
+  // *email del usuario (userEmail)
+  // *el nombre de state (stateName)
+  // *el id de la pelicula para asignar el movie state al usuario (movieId)
+  app.post("/users/addstate", (req, res) => {
+    // Crear state
+    db.UserMovie.create({state: req.body.stateName, movie: req.body.movieId }).then((data) => {
+      // State creado, buscando usuario para insertarle el nuevo MovieState
+      db.Users.findOneAndUpdate({email: req.body.userEmail},{$push: {states: data._id}}).then((userData) => {
+        res.json({"msg": "Movie state added to user: " + userData.name});
+      });
+    });
+
+  });
+
+  app.post("/users", (req, res) => {
+    db.Users.findOne({email: req.body.email})
+      .then((data) => {
+        if(data){
+          res.json({msg: "Email used exists in the database."})
+        } else {
+          db.Users.create(req.body).then((data) => {
+            res.json({msg: "User created successfully."})
+          });
+        }
       });
   });
 
@@ -105,11 +163,11 @@ module.exports = (app) => {
       })
     });
 
-  app.get("/deleteAll", (req, res) => {
-    db.Entertainment.deleteMany({}).then((data) => {
-      res.json(data);
-    });
-  });
+  // app.get("/deleteAll", (req, res) => {
+  //   db.Entertainment.deleteMany({}).then((data) => {
+  //     res.json(data);
+  //   });
+  // });
 
 
 };

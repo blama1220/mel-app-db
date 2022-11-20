@@ -1,5 +1,5 @@
-import { Schema, model } from "mongoose";
-
+const mongoose = require("mongoose");
+const Schema = mongoose.Schema;
 const userSchema = new Schema(
   {
     name: { type: String, required: true },
@@ -9,10 +9,11 @@ const userSchema = new Schema(
     location: String,
     age: Number,
     gender: String,
-    list: [{ moviesId: String, stateid: String }],
+    list: [{ type: Schema.Types.ObjectId, ref: 'Entertainment' }],
+    states: [{ type: Schema.Types.ObjectId, ref: 'UserMovie' }],
   },
   { timestamps: true }
 );
 
-const User = model("User", userSchema);
-export default User;
+const User = mongoose.model("User", userSchema);
+module.exports = User;
