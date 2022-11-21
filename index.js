@@ -4,7 +4,7 @@ let i = 0;
 
 let a = () => {
   i++;
-  console.log("Llamada numero: " + i);
+  // console.log("Llamada numero: " + i);
   axios
     .get(
       "https://api.themoviedb.org/3/movie/popular?api_key=ec93b5467b7afc166f44d66adc5c90db&language=en-US&page=" +
@@ -64,8 +64,8 @@ let b = (data) => {
   axios
     .post("http://localhost:5001/movie", obj)
     .then(function (response) {
-      console.log(response.data);
-      console.log("==================================================");
+      // console.log(response.data);
+      // console.log("==================================================");
     })
     .catch(function (error) {
       console.log(error);
