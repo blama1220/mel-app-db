@@ -13,14 +13,10 @@ module.exports = (app) => {
       })
       .then((data) => {
         res.json(data);
-      });
-  });
-
-  app.post("/getState", (req, res) => {
-    db.UserMovie.findById(req.body.id)
-      .populate("movie")
-      .then((data) => {
-        res.json(data);
+      })
+      .catch((err) => {
+        console.log(err);
+        res.json({ msg: "Internal database error" });
       });
   });
 
@@ -32,9 +28,66 @@ module.exports = (app) => {
     db.Users.findOneAndUpdate(
       { email: req.body.email },
       { $push: { list: req.body.movieId } }
-    ).then((data) => {
-      res.json("Movie added to " + data.name);
-    });
+    )
+      .then((data) => {
+        res.json("Movie added to " + data.name);
+      })
+      .catch((err) => {
+        console.log(err);
+        res.json({ msg: "Internal database error" });
+      });
+  });
+
+  // Login
+  // El body necesita:
+  // *Email del usuario (email)
+  // *Password del usuario (password)
+  app.post("/login", (req, res) => {
+    let body = req.body;
+
+    if (!body.email || !body.password) {
+      return res.json({
+        msg: "Please send the information necessary for the login.",
+      });
+    }
+    db.Users.findOne({ email: body.email })
+      .then((data) => {
+        if (!data === null) {
+          return res.json({ msg: "Email not found in the database" });
+        } else if (body.password === data.password) {
+          console.log(`Logged in with ${body.email}`);
+          data.list = null;
+          data.states = null;
+          data.password = null;
+          return res.json({
+            msg: "Auth successful",
+            auth: true,
+            data: data,
+          });
+        } else {
+          return res.json({ msg: "Incorrect password", auth: false });
+        }
+      })
+      .catch((err) => {
+        console.log(err);
+        return res.json({ msg: "Internal database error" });
+      });
+  });
+
+  // Get data by id
+  app.post("/getData/:id", (req, res) => {
+    db.Users.findById(req.params.id)
+      .then((data) => {
+        if (data) {
+          res.json({ movieList: data.list, movieStates: data.states });
+        } else {
+          res.json({ msg: "User not found." });
+        }
+      })
+      .catch((err) => {
+        console.log(err);
+        res.json({ msg: "Internal database error" });
+      });
   });
 
   // Agregar state movie al usuario
@@ -47,28 +100,39 @@ module.exports = (app) => {
     db.UserMovie.create({
       state: req.body.stateName,
       movie: req.body.movieId,
-    }).then((data) => {
-      // State creado, buscando usuario para insertarle el nuevo MovieState
-      db.Users.findOneAndUpdate(
-        { email: req.body.userEmail },
-        { $push: { states: data._id } }
-      ).then((userData) => {
-        res.json({ msg: "Movie state added to user: " + userData.name });
+    })
+      .then((data) => {
+        // State creado, buscando usuario para insertarle el nuevo MovieState
+        db.Users.findOneAndUpdate(
+          { email: req.body.userEmail },
+          { $push: { states: data._id } }
+        ).then((userData) => {
+          res.json({ msg: "Movie state added to user: " + userData.name });
+        });
+      })
+      .catch((err) => {
+        console.log(err);
+        res.json({ error: err, msg: "Internal database error" });
       });
-    });
   });
 
+  //Create Users
   app.post("/users", (req, res) => {
     console.log(req.body);
-    db.Users.findOne({ email: req.body.email }).then((data) => {
-      if (data) {
-        res.json({ msg: "Email used exists in the database." });
-      } else {
-        db.Users.create(req.body).then((data) => {
-          res.json({ msg: "User created successfully." });
-        });
-      }
-    });
+    db.Users.findOne({ email: req.body.email })
+      .then((data) => {
+        if (data) {
+          res.json({ msg: "Email used exists in the database." });
+        } else {
+          db.Users.create(req.body).then((data) => {
+            res.json({ msg: "User created successfully." });
+          });
+        }
+      })
+      .catch((err) => {
+        console.log(err);
+        res.json({ msg: "Internal database error" });
+      });
   });
 
   app.get("/entertainment", (req, res) => {
@@ -78,6 +142,10 @@ module.exports = (app) => {
       .skip(req.query.startIndex ?? 0)
       .then((data) => {
         res.json(data);
+      })
+      .catch((err) => {
+        console.log(err);
+        res.json({ msg: "Internal database error" });
       });
   });
 
@@ -87,6 +155,10 @@ module.exports = (app) => {
       .limit(20)
       .then((data) => {
         res.json(data);
+      })
+      .catch((err) => {
+        console.log(err);
+        res.json({ msg: "Internal database error" });
       });
   });
 
@@ -96,6 +168,10 @@ module.exports = (app) => {
       .limit(20)
       .then((data) => {
         res.json(data);
+      })
+      .catch((err) => {
+        console.log(err);
+        res.json({ msg: "Internal database error" });
       });
   });
 
@@ -105,16 +181,25 @@ module.exports = (app) => {
       .limit(20)
       .then((data) => {
         res.json(data);
+      })
+      .catch((err) => {
+        console.log(err);
+        res.json({ msg: "Internal database error" });
       });
   });
 
   app.post("/entertainment/billboard/:id", (req, res) => {
     const change = { type: "billboard" };
-    db.Entertainment.findByIdAndUpdate(req.params.id, change).then((data) => {
-      if (data) {
-        res.send("Movie added to billboard.");
-      }
-    });
+    db.Entertainment.findByIdAndUpdate(req.params.id, change)
+      .then((data) => {
+        if (data) {
+          res.send("Movie added to billboard.");
+        }
+      })
+      .catch((err) => {
+        console.log(err);
+        res.json({ msg: "Internal database error" });
+      });
   });
 
   app.get("/entertainment/bytype/:type", (req, res) => {
@@ -123,6 +208,10 @@ module.exports = (app) => {
       .limit(20)
       .then((data) => {
         res.json(data);
+      })
+      .catch((err) => {
+        console.log(err);
+        res.json({ msg: "Internal database error" });
       });
   });
 
@@ -132,13 +221,22 @@ module.exports = (app) => {
       .limit(20)
       .then((data) => {
         res.json(data);
+      })
+      .catch((err) => {
+        console.log(err);
+        res.json({ msg: "Internal database error" });
       });
   });
 
   app.post("/entertainment", (req, res) => {
-    db.Entertainment.create(req.body).then((data) => {
-      res.json(data);
-    });
+    db.Entertainment.create(req.body)
+      .then((data) => {
+        res.json(data);
+      })
+      .catch((err) => {
+        console.log(err);
+        res.json({ msg: "Internal database error" });
+      });
   });
 
   app.get("/entertainment/search", (req, res) => {
@@ -147,19 +245,28 @@ module.exports = (app) => {
       .limit(10)
       .then((data) => {
         res.json(data);
+      })
+      .catch((err) => {
+        console.log(err);
+        res.json({ msg: "Internal database error" });
       });
   });
 
   // Agregar genero (Dominican, ETC)
   app.post("/entertainment/addgenre/:id/:genre", (req, res) => {
     const genre = { $push: { genres: req.params.genre } };
-    db.Entertainment.findByIdAndUpdate(req.params.id, genre).then((data) => {
-      if (data) {
-        res.send(
-          "Movie genre " + req.params.genre + " added to movie " + data.title
-        );
-      }
-    });
+    db.Entertainment.findByIdAndUpdate(req.params.id, genre)
+      .then((data) => {
+        if (data) {
+          res.send(
+            "Movie genre " + req.params.genre + " added to movie " + data.title
+          );
+        }
+      })
+      .catch((err) => {
+        console.log(err);
+        res.json({ msg: "Internal database error" });
+      });
   });
 
   // app.get("/deleteAll", (req, res) => {
