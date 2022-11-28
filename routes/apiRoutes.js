@@ -75,8 +75,15 @@ module.exports = (app) => {
   });
 
   // Get data by id
-  app.post("/getData/:id", (req, res) => {
+  app.get("/getData/:id", (req, res) => {
     db.Users.findById(req.params.id)
+      .populate("states")
+      .populate({
+        path: "states",
+        populate: {
+          path: "movie",
+        },
+      })
       .then((data) => {
         if (data) {
           res.json({ movieList: data.list, movieStates: data.states });
@@ -90,30 +97,90 @@ module.exports = (app) => {
       });
   });
 
-  // Agregar state movie al usuario
-  // El body necesita:
-  // *email del usuario (userEmail)
-  // *el nombre de state (stateName)
-  // *el id de la pelicula para asignar el movie state al usuario (movieId)
-  app.post("/users/addstate", (req, res) => {
-    // Crear state
-    db.UserMovie.create({
-      state: req.body.stateName,
-      movie: req.body.movieId,
-    })
+  // El body necesita userId
+  app.post("/getData/:state", (req, res) => {
+    db.Users.findById(req.body.userId)
+      .populate("states")
+      .populate({
+        path: "states",
+        populate: {
+          path: "movie",
+        },
+      })
       .then((data) => {
-        // State creado, buscando usuario para insertarle el nuevo MovieState
-        db.Users.findOneAndUpdate(
-          { email: req.body.userEmail },
-          { $push: { states: data._id } }
-        ).then((userData) => {
-          res.json({ msg: "Movie state added to user: " + userData.name });
-        });
+        if (data.states.length != 0) {
+          let states = [];
+          data.states.forEach((el) => {
+            console.log(el.state);
+            if (el.state === req.params.state) {
+              states.push(el);
+            }
+          });
+          if (states.length === 0) {
+            res.json({ msg: "No states found for user" });
+          } else {
+            res.json({ states: states });
+          }
+        } else {
+          res.json({ msg: "No states found for user" });
+        }
       })
       .catch((err) => {
         console.log(err);
-        res.json({ error: err, msg: "Internal database error" });
+        res.json({ msg: "Internal database error" });
       });
+  });
+
+  // Agregar state movie al usuario
+  // El body necesita:
+  // email del usuario (userEmail)
+  //el nombre de state (stateName)
+  // *el id de la pelicula para asignar el movie state al usuario (movieId)
+  app.post("/users/addstate", (req, res) => {
+    console.log(req.body);
+    try {
+      db.Users.find({ email: req.body.userEmail })
+        .populate("states")
+        .then((data) => {
+          // data del usuario en question
+          let updated = false;
+          data[0].states.forEach((state) => {
+            if (state.movie.toString() === req.body.movieId) {
+              // Change state
+              updated = true;
+              if (req.body.stateName === state.state) {
+                return res.json({
+                  msg: "State already exist with this movie.",
+                });
+              }
+              db.UserMovie.findByIdAndUpdate(state._id, {
+                state: req.body.stateName,
+              }).then((data) => {
+                return res.json({ msg: "State assinged successfuly." });
+              });
+            }
+          });
+          if (!updated) {
+            db.UserMovie.create({
+              state: req.body.stateName,
+              movie: req.body.movieId,
+            }).then((data) => {
+              // State creado, buscando usuario para insertarle el nuevo MovieState
+              db.Users.findOneAndUpdate(
+                { email: req.body.userEmail },
+                { $push: { states: data._id } }
+              ).then((userData) => {
+                return res.json({
+                  msg: "Movie state added to user: " + userData.name,
+                });
+              });
+            });
+          }
+        });
+    } catch (error) {
+      console.log(error);
+      return res.json({ error: error, msg: "Internal database error" });
+    }
   });
 
   //Create Users
@@ -269,9 +336,74 @@ module.exports = (app) => {
       });
   });
 
+  
+  // Necesita userId en el body
+  app.post("/recomendation", (req, res) => {
+    db.Users.findById(req.body.userId)
+      .populate("states")
+      .populate({
+        path: "states",
+        populate: {
+          path: "movie",
+        },
+      })
+      .then((data) => {
+        let genres = [];
+        data.states.forEach((state) => {
+          genres.push(
+            state.movie.genres[
+              Math.floor(Math.random() * state.movie.genres.length)
+            ]
+          );
+        });
+        console.log(genres);
+        db.Entertainment.find({
+          genres: { $in: genres },
+          year: { $gt: 2014, $lt: 2022 },
+          rating: { $gt: 7, $lt: 10 },
+        })
+          .sort({ rating: -1 })
+          .limit(100)
+          .then((data) => {
+            let finalMovies = [];
+            for (let i = 0; i < 10; i++) {
+              finalMovies.push(data[Math.floor(Math.random() * data.length)]);
+            }
+            finalMovies = finalMovies.sort((p1, p2) =>
+              p1.rating < p2.rating ? 1 : p1.rating > p2.rating ? -1 : 0
+            );
+            return res.json(finalMovies);
+          });
+      });
+  });
+
   // app.get("/deleteAll", (req, res) => {
   //   db.Entertainment.deleteMany({}).then((data) => {
   //     res.json(data);
   //   });
   // });
+
+  // Admin page
+
+  app.delete("/users/:id", (req, res) => {
+    db.Users.deleteOne({ _id: req.params.id })
+      .then((data) => {
+        res.json({ msg: "Deleted successfuly" });
+      })
+      .catch((err) => {
+        console.log(err);
+        res.json({ msg: "Internal database error" });
+      });
+  });
+
+  app.delete("/entertainment/:id", (req, res) => {
+    db.Entertainment.deleteOne({ _id: req.params.id })
+      .then((data) => {
+        res.json({ msg: "Deleted successfuly" });
+      })
+      .catch((err) => {
+        console.log(err);
+        res.json({ msg: "Internal database error" });
+      });
+  });
 };
