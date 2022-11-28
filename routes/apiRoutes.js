@@ -244,6 +244,7 @@ module.exports = (app) => {
 
   app.get("/entertainment/billboard", (req, res) => {
     db.Entertainment.find({})
+      .sort({ createdAt: -1 })
       .find({ type: "billboard" })
       .limit(20)
       .then((data) => {
@@ -336,7 +337,6 @@ module.exports = (app) => {
       });
   });
 
-  
   // Necesita userId en el body
   app.post("/recomendation", (req, res) => {
     db.Users.findById(req.body.userId)
