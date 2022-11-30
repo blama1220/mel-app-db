@@ -1,5 +1,6 @@
 const db = require("../models");
 var mongoose = require("mongoose");
+
 module.exports = (app) => {
   app.get("/users", (req, res) => {
     db.Users.find({})
@@ -261,7 +262,21 @@ module.exports = (app) => {
     db.Entertainment.findByIdAndUpdate(req.params.id, change)
       .then((data) => {
         if (data) {
-          res.send("Movie added to billboard.");
+          res.send({msg:"Movie added to billboard."});
+        }
+      })
+      .catch((err) => {
+        console.log(err);
+        res.json({ msg: "Internal database error" });
+      });
+  });
+
+  app.put("/entertainment/remove/:id", (req, res) => {
+    const change = { type: "Movie" };
+    db.Entertainment.findByIdAndUpdate(req.params.id, change)
+      .then((data) => {
+        if (data) {
+          res.json({msg: "Movie removed from billboard."});
         }
       })
       .catch((err) => {
