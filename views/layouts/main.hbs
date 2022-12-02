@@ -76,6 +76,7 @@
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
   <script>
     let status;
+    let endpoint = "https://lit-springs-45882.herokuapp.com/"
 
     let getDataAndRender = (endpoint) => {
       axios({
@@ -185,7 +186,7 @@
           document.getElementById("toggle-btn").innerHTML = el.innerHTML;
           status = el.getAttribute("search");
     
-          getDataAndRender('http://localhost:5001/' + status);
+          getDataAndRender(endpoint + status);
 
           if(status === "entertainment/billboard") {
 
@@ -202,11 +203,11 @@
         el.onclick = function() {
         axios({
           method: 'delete',
-          url: 'http://localhost:5001/' + status + "/" + el.getAttribute("data"),
+          url: endpoint + status + "/" + el.getAttribute("data"),
         })
           .then(function (response) {
             alert(response.data.msg);
-            getDataAndRender('http://localhost:5001/' + status);
+            getDataAndRender(endpoint + status);
           });
         }
       } 
@@ -219,11 +220,11 @@
         el.onclick = function() {
           axios({
             method: 'put',
-            url: 'http://localhost:5001/entertainment/remove/' + el.getAttribute("data"),
+            url: endpoint + 'entertainment/remove/' + el.getAttribute("data"),
           })
           .then(function (response) {
             alert(response.data.msg);
-            getDataAndRender('http://localhost:5001/entertainment/billboard');
+            getDataAndRender(endpoint + 'entertainment/billboard');
           });
       }
       } 
@@ -237,12 +238,12 @@
       e.preventDefault();
       axios({
         method: 'post',
-        url: '/entertainment/billboard/' + document.getElementById("billboardInput").value
+        url: endpoint + 'entertainment/billboard/' + document.getElementById("billboardInput").value
       })
         .then(function (response) {
           alert(response.data.msg);
           document.getElementById("billboardInput").value = ""
-          getDataAndRender('http://localhost:5001/entertainment/billboard');
+          getDataAndRender(endpoint + 'entertainment/billboard');
         });
       }
     } 
@@ -252,10 +253,10 @@
 
     search.addEventListener('input', function (event) {
       status = "entertainment"
-      getSearchAndRender("http://localhost:5001/entertainment/search/?title=" + event.srcElement.value);
+      getSearchAndRender(endpoint + "entertainment/search/?title=" + event.srcElement.value);
     });
 
-    getSearchAndRender("http://localhost:5001/entertainment/");
+    getSearchAndRender(endpoint + "entertainment/");
       
   </script>
 </html>
