@@ -262,7 +262,7 @@ module.exports = (app) => {
     db.Entertainment.findByIdAndUpdate(req.params.id, change)
       .then((data) => {
         if (data) {
-          res.send({msg:"Movie added to billboard."});
+          res.send({ msg: "Movie added to billboard." });
         }
       })
       .catch((err) => {
@@ -276,7 +276,7 @@ module.exports = (app) => {
     db.Entertainment.findByIdAndUpdate(req.params.id, change)
       .then((data) => {
         if (data) {
-          res.json({msg: "Movie removed from billboard."});
+          res.json({ msg: "Movie removed from billboard." });
         }
       })
       .catch((err) => {
@@ -365,20 +365,46 @@ module.exports = (app) => {
       .then((data) => {
         let genres = [];
         data.states.forEach((state) => {
-          genres.push(
-            state.movie.genres[
-              Math.floor(Math.random() * state.movie.genres.length)
-            ]
-          );
+          genres.push(...state.movie.genres);
         });
-        console.log(genres);
+        let obj = {};
+        for (const genree of genres) {
+          if (obj[genree] === undefined) {
+            obj[genree] = 1;
+          } else {
+            obj[genree]++;
+          }
+        }
+
+        let arrayToSort = [];
+        let keys = Object.keys(obj);
+        let vals = Object.values(obj);
+        for (let i = 0; i < keys.length; i++) {
+          let obj = {};
+
+          obj["name"] = keys[i];
+          obj["count"] = vals[i];
+          arrayToSort.push(obj);
+        }
+
+        arrayToSort = arrayToSort.sort((p1, p2) =>
+          p1.count < p2.count ? 1 : p1.count > p2.count ? -1 : 0
+        );
+
+        let finalGenres = [];
+        arrayToSort.forEach((genre, index) => {
+          if (index < 3) {
+            finalGenres.push(genre.name);
+          }
+        });
+
         db.Entertainment.find({
-          genres: { $in: genres },
+          genres: { $in: finalGenres },
           year: { $gt: 2014, $lt: 2022 },
           rating: { $gt: 6.5, $lt: 10 },
         })
           .sort({ rating: -1 })
-          .limit(100)
+          .limit(150)
           .then((data) => {
             let finalMovies = [];
             for (let i = 0; i < 10; i++) {
