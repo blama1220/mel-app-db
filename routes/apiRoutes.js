@@ -375,7 +375,7 @@ module.exports = (app) => {
         db.Entertainment.find({
           genres: { $in: genres },
           year: { $gt: 2014, $lt: 2022 },
-          rating: { $gt: 7, $lt: 10 },
+          rating: { $gt: 6.5, $lt: 10 },
         })
           .sort({ rating: -1 })
           .limit(100)

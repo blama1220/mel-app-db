@@ -5,7 +5,7 @@ const { engine } = require('express-handlebars');
 // Get variables from .env file
 require("dotenv").config();
 
-const PORT = 5001;
+const PORT = process.env.PORT || 5001;
 const MONGODB_URI =
   "mongodb+srv://billmell:billmell@melapi.cqewmco.mongodb.net/?retryWrites=true&w=majority";
 
